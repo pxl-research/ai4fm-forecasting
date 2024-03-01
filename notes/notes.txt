@@ -1,0 +1,166 @@
+--------------------------------------------------------------------------------
+Retrieve data from database
+--------------------------------------------------------------------------------
+Use VPN (Big-IP Edge Client) to connect to PXL intranet.
+Adminer: http://10.125.30.9/adminer/
+login: iot_read_only
+pass: jYVop3uGsiEkhama
+database: pxl_dpb
+
+Export each table seperately as a CSV with commas.
+
+--------------------------------------------------------------------------------
+Project description
+--------------------------------------------------------------------------------
+
+1) Smart Classroom
+-------------------
+Data opgemeten per klaslokaal.
+Nood aan ventilatie (voor mindere CO2) voorspellen:
+* pro-actief als een les gaat beginnen en we weten dat CO2 te hoog gaat worden
+dan willen we op voorhand ventileren. Dan gaat ventilatiesysteem al op volle toeren
+draaien op het moment dat er volk toestroomt.
+Als er de komende 4u geen les meer is: stoppen met ventileren, want CO2 daalt vanzelf.
+
+Maak aparte tabel (DataFrame) per klaslokaal (net zoals household in model_comparison_framework).
+
+2) AI4FM
+---------
+* Verwarming pro-actief voor 4 klaslokalen (F-blok oost) aansturen.
+Over ventilatie wordt niet meer gesproken.
+4 lokalen staan op dezelfde verwarmingskring, maar hebben verschillende soorten
+ventilatiesystemen en verwarming (radiatoren in lokaal).
+
+* Personentellers voorzien in elk lokaal (niet 100% accuraat, maar geeft een idee).
+Lessenroosters niet bruikbaar, want daarop staat niet hoeveel volk er komt.
+
+* Output: binnentemperatuur voor elk lokaal apart 
+en dan met een apart fysiek model (formule) later % kraan bepalen om verwarming aan te sturen.
+
+* Input:
+is er data van verschillende lokalen
+* personenteller: elk lokaal heeft een personenteller (hpd_106, hpd_107, hpd_205, hpd_207)
+* radiator_id: elk lokaal heeft 3 radiatoren met een elk een eigen id.
+Enkel lokaal d_f205 heeft er 2.
+* raam_id: voorlopig enkel d_f106_1, we moeten raam_id's van andere lokalen nog krijgen.
+* ventilatie_id: enkel ventilatie in d_f106 (zehnder550d_f106) en d_f207 (jaga_oxygen_f207)
+
+Voor elk lokaal apart:
+----------------------
+Frequentie: Elke sensor doet 1 meting per minuut.
+Data start ergens in september 2022.
+
+1) Klimaat sensor:
+* tijdstip
+* temperatuur [binnen in *C]
+* relatieve vochtigheid [% in 0..100]
+* co2 [ppm]
+
+2) Radiatoren sensoren (Novocon kranen):
+(Vraag: is dit per radiator (meerdere per lokaal) of voor alle radiatoren samen (1 per lokaal))
+* tijdstip
+* debiet [l/h] => NIET CORRECT
+* aanvoer_temp [*C]
+* retour_temp [*C]
+* delta_t [*C] => (aanvoer - retour, negeer afrondingsfouten) heel belangrijk om te weten hoe radiator gefunctioneerd heeft!
+* vermogen [kW] => NIET CORRECT (omwille van incorrect debiet)
+* positie_kraan [% in 0..100]
+* energieteller [kWh] (was om vermogen te controleren, maar ook hier zijn problemen mee)
+
+3) Ramen:
+We weten enkel of er een raam open is in het lokaal (niet hoeveel en ook niet welk).
+Ook weer 1 per lokaal.
+* tijdstip
+* raamstand [open of dicht]
+* raamopen [0 of 1] 
+beide signalen zeggen hetzelfde dus vervangen door raamopen 0 of 1
+Kijk bij missing values eventueel of het ene het andere opvangt.
+
+4) Personenteller sensor:
+Hier enkel tijdstip, personenteller_id, aantal_personen gebruiken en de andere negeren. 
+Ook weer 1 per lokaal.
+* tijdstip
+* personenteller_id
+* aantal_personen
+* temperatuur [*C]
+* vochtigheid [%]
+* helderheid [lux]
+
+
+
+5) Ventilatie sensor:
+1 ventilatiesysteem sensor per lokaal.
+Dubbele dingen kan je gebruiken om andere missende waarden op te vangen.
+* tijdstip
+* aanvoersnelheid [%]
+* afvoersnelheid [%]
+* aanvoer_temp [*C]
+* buiten_temp [*C]
+* co2 [ppm]
+* rel_vochtigheid [%]
+* modus [auto, manueel,...]
+* filtertijd_resterend [dagen]
+
+6) Weather: meerdere weerstations op het dak (gebruik weerstation Oost)
+* timestamp
+* temp_outside
+* rel_humidity
+* air_pressure
+* daily_rainfall (hoeveel regen gemiddeld op een dag)
+* rainfall (op dit tijdstip)
+* wind_direction
+* wind_speed
+* sun_radiation (zonne-instraling op ramen)
+
+7) Weather_wsc11: gebruiken ipv andere weather: specifiek zonne-instraling weten op oost-kant.
+
+(28:46): lessenrooster data was iets met "class"
+
+
+
+-------------------------------------------
+df_features_all_models (per lokaal 1 tabel)
+-------------------------------------------
+Data om de 10 minuten aggregeren (van per minuut naar per 10 minuten).
+Forecast horizon: 12 datapunten (2 uur)
+TODO: aan Servaas nog vragen of tijdstip msg_timestamp (Unix timestamp) de juiste is.
+Metrieken: R-squared (best meer dan 82%), MSE
+
+! index: DateTime [datetime64] (tijdstip start van laatste vroegste tijdstip en eindig op vroegste laatste tijdstip)
+    ! index in dag [0, 6*24[ (exogeen)
+    ! dayofweek (exogeen)
+    ! month (exogeen)
+    ! kwartaal (exogeen)
+! Klimaat_temperatuur [*C] (binnentemperatuur)
+! Klimaat_co2 [ppm] (binnen CO2-gehalte)
+! Radiator_Delta_t [*C, float] (weten hoeveel radiator heeft gewerkt, gemiddelde nemen van alle (2 of 3) radiatoren in lokaal)
+! Ramen_raamopen [0 of 1]
+! Personenteller_aantal_personen
+! AirTemperature_weersvoorspelling
+! AirTemperature_laatste waarde0
+(Idem voor housing temperature nadien)
+! BrightessEast
+
+Te voorspellen (targets):
+* Ventilatie: Klimaat_co2 voorspellen.
+* Verwarming: Klimaat_temperatuur (binnentemperatuur) voorspellen.
+
+
+
+
+Vragen
+------
+* Ventilatie (co2 voorspellen) en verwarming (binnentemperatuur) 2 aparte modellen?
+
+* Mag data geaggregeerd worden tot gemiddelde meetpunten per uur? vb. 8u30, 9u30, 10u30 (zo vallen lesuren) of 9u, 10u, 11u, of liever per halfuur of een kleiner aggregatie-interval of iets anders?
+
+* WEERSVOORSPELLINGEN GAAN KUNNEN HELPEN om accuraat aan binnentemperatuur te geraken.
+
+(* Wat moet precies voorspeld worden voor verwarming?
+Klimaat: temperatuur (binnen) [*C] = juiste antwoord
+of Radiatoren: positie_kraan [%])
+
+* Wat moet precies voorspeld worden voor ventilatie om ze te kunnen aansturen?
+Volstaat het CO2-gehalte zodat daarrond dan een klein algoritme geschreven kan worden om de ventilatie aan te sturen (zoals we voor de radiatoren aan te sturen gewoon de temperatuur gingen voorspellen om dan met een apart algoritme de kraan aan te sturen)?
+
+* Ventilatie en verwarming moet x en y aantal uur op voorhand aangestuurd worden. Hoeveel uur op voorhand zou het langste zijn wat praktisch kan voorvallen voor elk? Ik vraag dit omdat ik voor de binnentemperatuur en het CO2-gehalte een forecast moet doen, maar zou moeten weten hoe ik die best voorspel: bijvoorbeeld iedere keer voor het eerste lesuur een voorspelling doen voor de volgende 24 uur. Dus ik zou eigenlijk een soort van worst-case moeten weten. Stel dat die onder de 24 uur ligt, dan weet ik zeker dat de traagheid van de ventilatie en de verwarming niet voor problemen zorgt als ik 24 uur op voorhand voorspel. Maar stel dat die worst-case veel korter is, dan zou ik bijvoorbeeld kunnen zeggen: ik voorspel om middernacht (wat al korter bij het eerst volgende lesuur is) en dan zijn de resultaten ook veel preciezer. I hope that makes sense.
