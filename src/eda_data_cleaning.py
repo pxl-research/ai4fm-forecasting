@@ -505,8 +505,7 @@ def main() -> None:
         df_combined.index.names = ["DateTime"]
         dfs_dict_combined[lokaal] = df_combined
 
-    print(dfs_dict_combined)
-    exit(0)
+    #print(dfs_dict_combined)
     for key, df in dfs_dict_combined.items():
         df.to_pickle(f"{CLEAN_DATA_PATH}/{key}_all_data_cleaned.pickle")
 

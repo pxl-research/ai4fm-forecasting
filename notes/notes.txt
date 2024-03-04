@@ -26,8 +26,7 @@ Maak aparte tabel (DataFrame) per klaslokaal (net zoals household in model_compa
 
 2) AI4FM
 ---------
-* Verwarming pro-actief voor 4 klaslokalen (F-blok oost) aansturen.
-Over ventilatie wordt niet meer gesproken.
+* Verwarming en ventilatie pro-actief voor 4 klaslokalen (F-blok oost) aansturen.
 4 lokalen staan op dezelfde verwarmingskring, maar hebben verschillende soorten
 ventilatiesystemen en verwarming (radiatoren in lokaal).
 
