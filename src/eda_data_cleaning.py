@@ -506,8 +506,31 @@ def main() -> None:
         dfs_dict_combined[lokaal] = df_combined
 
     #print(dfs_dict_combined)
+    
+    # All data
+    #for key, df in dfs_dict_combined.items():
+    #    df.to_pickle(f"{CLEAN_DATA_PATH}/{key}_all_data_cleaned.pickle")
+
+    # Training set (e.g. f106_train_oct2022_mar2023.pickle)
     for key, df in dfs_dict_combined.items():
-        df.to_pickle(f"{CLEAN_DATA_PATH}/{key}_all_data_cleaned.pickle")
+        start_datetime = pd.to_datetime("2022-10-01 00:00:00")
+        end_datetime = pd.to_datetime("2023-03-31 23:59:59")
+        df_train = df.loc[start_datetime:end_datetime]
+        df_train.to_pickle(f"{CLEAN_DATA_PATH}/{key}_train_oct2022_mar2023.pickle")
+
+    # Validation set 1 (e.g. f106_valid1_oct2023_dec2023)
+    for key, df in dfs_dict_combined.items():
+        start_datetime = pd.to_datetime("2023-10-01 00:00:00")
+        end_datetime = pd.to_datetime("2023-12-31 23:59:59")
+        df_valid_1 = df.loc[start_datetime:end_datetime]
+        df_valid_1.to_pickle(f"{CLEAN_DATA_PATH}/{key}_valid1_oct2023_dec2023.pickle")
+
+    # Validation set 2 (e.g. f106_valid2_feb2024_mar2024)
+    for key, df in dfs_dict_combined.items():
+        start_datetime = pd.to_datetime("2024-02-01 00:00:00")
+        end_datetime = pd.to_datetime("2024-03-31 23:59:59")
+        df_valid_2 = df.loc[start_datetime:end_datetime]
+        df_valid_2.to_pickle(f"{CLEAN_DATA_PATH}/{key}_valid2_feb2024_mar2024.pickle")
 
     print(f"Succesfully cleaned all data and serialized it into:\n{CLEAN_DATA_PATH}")
 

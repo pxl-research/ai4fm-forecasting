@@ -17,10 +17,16 @@ Tussen 7u en 19u wordt er gestookt, daarbuiten niet meer: 19 graden => nu 20 gra
 Tussen 19u en 7u: 15 graden als minimale binnentemperatuur.
 
 Periodes:
-* Training: stookseizoen vorig acedemiejaar
-* Validatie set 1: oktober - december dit academiejaar
-* Validatie set 2: februari - maart
-* Reden: veranderingen in januari
+* Training: stookseizoen vorig acedemiejaar (oktober - maart) in 2022 - 2023
+* Validatie set 1: oktober - december dit academiejaar in 2023 - 2024
+* Validatie set 2: februari - maart dit academiejaar in 2023 - 2024
+Reden: veranderingen in januari
+
+Naming of files:
+f106_train_oct2022_mar2023.pickle
+f106_valid1_oct2023_dec2023
+f106_valid2_feb2024_mar2024
+...
 
 
 --------------------------------------------------------------------------------
