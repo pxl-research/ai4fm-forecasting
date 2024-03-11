@@ -462,6 +462,7 @@ def dfs_dict_ramen_cleanup(selected_features: list[str], lokalen_list: list[str]
 def main() -> None:
     # TODO: might do imputation when all tables are merged per classroom
     # TODO: check if chosen imputation scheme for each table is correct
+    # TODO: update data to also include march 2024 fully (do this in april)
     # ------------------------------------------------------------------------------------------------------------------
     # Lokalen
     # ------------------------------------------------------------------------------------------------------------------
