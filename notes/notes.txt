@@ -9,6 +9,20 @@ database: pxl_dpb
 
 Export each table seperately as a CSV with commas.
 
+
+--------------------------------------------------------------------------------
+Tran/test split
+--------------------------------------------------------------------------------
+Tussen 7u en 19u wordt er gestookt, daarbuiten niet meer: 19 graden => nu 20 graden als streeftemperatuur voor binnen.
+Tussen 19u en 7u: 15 graden als minimale binnentemperatuur.
+
+Periodes:
+* Training: stookseizoen vorig acedemiejaar
+* Validatie set 1: oktober - december dit academiejaar
+* Validatie set 2: februari - maart
+* Reden: veranderingen in januari
+
+
 --------------------------------------------------------------------------------
 Project description
 --------------------------------------------------------------------------------
